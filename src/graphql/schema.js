@@ -2,6 +2,7 @@ import {
   GraphQLSchema,
   GraphQLObjectType,
   GraphQLID,
+  GraphQLInt,
   GraphQLString,
   GraphQLList,
 } from 'graphql';
@@ -26,6 +27,24 @@ const QueryType = new GraphQLObjectType({
     people: {
       type: new GraphQLList(PersonType),
       resolve: () => peopleData,
+    },
+    currentTime: {
+      type: GraphQLString,
+      args: {
+        offset: {
+          type: GraphQLInt,
+        },
+      },
+      resolve(model, args) {
+        console.log('currentTime resolve called');
+        return new Promise((resolve) => {
+          setTimeout(() => {
+            const result = new Date(Date.now() + args.offset).toJSON();
+            console.log('currentTime returning', result);
+            resolve(result);
+          }, 2000);
+        });
+      },
     },
   },
 });

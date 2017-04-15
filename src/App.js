@@ -1,46 +1,74 @@
 import React, { Component } from 'react';
 import { gql, graphql } from 'react-apollo';
+import { connect } from 'react-redux';
+import { bindActionCreators } from 'redux';
+import { increment } from './counter';
 
 class App extends Component {
+  refetch = () => {
+    console.log('refetch');
+    this.props.data.refetch({
+      offset: 2,
+    });
+  }
+
   render() {
-    const { data: { loading, people } } = this.props;
+    const { data, count } = this.props;
+    const { loading, currentTime } = data;
     return (
       <main>
         <header>
-          <h1>Apollo Client Error Template</h1>
-          <p>
-            This is a template that you can use to demonstrate an error in Apollo Client.
-            Edit the source code and watch your browser window reload with the changes.
-          </p>
-          <p>
-            The code which renders this component lives in <code>./src/App.js</code>.
-          </p>
-          <p>
-            The GraphQL schema is in <code>./src/graphql/schema</code>.
-            Currently the schema just serves a list of people with names and ids.
-          </p>
+          <h1>Refetch Ignored</h1>
+          <p>Conditions required for this bug</p>
+          <ul>
+            <li>Refetch is called with different variables</li>
+            <li>Other props on the componnet get updated before the refetch finishes</li>
+          </ul>
+          <p>To reproduce</p>
+          <ul>
+            <li>Once loaded, click the refetch button</li>
+            <li>Before the load finishes, click the increment button</li>
+          </ul>
         </header>
+        <p>Count: {count}<br/>
+          <button onClick={this.props.increment}>Increment</button>
+        </p>
         {loading ? (
           <p>Loading…</p>
         ) : (
-          <ul>
-            {people.map(person => (
-              <li key={person.id}>
-                {person.name}
-              </li>
-            ))}
-          </ul>
+          <p>
+            { currentTime }<br />
+            <button onClick={this.refetch}>Refetch</button>
+          </p>
         )}
       </main>
     );
   }
 }
 
-export default graphql(
-  gql`{
-    people {
-      id
-      name
-    }
-  }`,
-)(App)
+const AppWithData = graphql(
+  gql`query currentTime($offset: Int) {
+    currentTime(offset: $offset)
+  }`, {
+    options(ownProps) {
+      return {
+        variables: {
+          offset: 1,
+        },
+      };
+    },
+  }
+)(App);
+
+function mapStateToProps(state) {
+  return {
+    count: state.counter,
+  };
+}
+
+function mapDispatchToProps(dispatch) {
+  return bindActionCreators({
+    increment,
+  }, dispatch);
+}
+export default connect(mapStateToProps, mapDispatchToProps)(AppWithData);
